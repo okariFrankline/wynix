@@ -5,6 +5,7 @@ defmodule Wynix.User.Account do
   use Ecto.Schema
   import Ecto.Changeset
   alias Wynix.User.Utils
+  alias Wynix.Utilities.ContactValidations, as: Validations
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -13,9 +14,9 @@ defmodule Wynix.User.Account do
     # an account can either be "Client" or "Practise" or "Freelance"
     field :account_type, :string
     field :email, :string
+    field :full_name, :string
     field :password, :string, virtual: true
     field :password_hash, :string
-    field :username, :string
     field :is_active, :boolean, default: true
     field :is_suspended, :boolean, default: false
 
@@ -31,13 +32,11 @@ defmodule Wynix.User.Account do
     account
     |> cast(attrs, [
       :email,
-      :password,
-      :password_hash,
       :account_type,
       :account_code,
-      :username,
       :is_active,
-      :is_suspended
+      :is_suspended,
+      :full_name
     ])
   end
 
@@ -51,20 +50,23 @@ defmodule Wynix.User.Account do
     changeset(account, attrs)
     # ensure the password is given
     |> cast(attrs, [
-      :email,
       :password,
-      :password_confirmation
+      :password_hash
     ])
     # validate required
     |> validate_required([
       :email
-    ], message: "Your email address is required.")
+    ], message: "Email address is required.")
     # validate the password
     |> validate_required([
       :password
       ],
-      message: "Your password must be given"
+      message: "Password is required."
     )
+    # ensure the full_name is given
+    |> validate_required([
+      :full_name
+    ], message: "Account Full Name is required.")
     # ensure the password is atleast 8 characters
     |> validate_length(
       :password,
@@ -72,8 +74,8 @@ defmodule Wynix.User.Account do
       min_length: 8,
       message: "Password must be atleast 8 characters long"
     )
-    # generate the username for the user
-    |> Utils.put_username()
+    # validate the email format
+    |> Validations.validate_email_format()
     # put the account code
     |> Utils.put_account_code()
     # hash the password
@@ -81,25 +83,51 @@ defmodule Wynix.User.Account do
     # ensure the email is unique
     |> unique_constraint(
       :email,
-      message: "The email #{attrs.email} is already taken"
+      message: "The email #{attrs.email} is already taken."
     )
 
   end # end of the registration changeset
 
-  # changeset for changing the username
-  def username_changeset(account, attrs) do
+  @spec password_changeset(
+          {map, map} | %{:__struct__ => atom | %{__changeset__: map}, optional(atom) => any},
+          :invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}
+        ) :: Ecto.Changeset.t()
+  @doc false
+  def password_changeset(account, attrs) do
     changeset(account, attrs)
-    # ensure the username is given
-    |> validate_required([:username],
-      message: "The new username is already taken."
+    # cast the password
+    |> cast(attrs, [
+      :password
+    ])
+    # ensure the new passsword is given
+    |> validate_required([
+      :password
+    ], message: "New password must be given.")
+    # ensure the password is atleast 8 characters long
+    |> validate_length(
+      :password,
+      min_length: 8,
+      max_length: 100,
+      message: "New password must be 8 characters long."
     )
-    # ensure the username is unique
+    # ensure the passwords are not duplicate
+    |> Utils.validate_duplicate_current_email()
+  end # end of the passsword_changeset function
+
+  @doc false
+  def email_changeset(account, attrs) do
+    changeset(account, attrs)
+    # ensure the eamil is given
+    |> validate_required([
+      :email
+    ], message: "New email address is required.")
+    # ensure the email address is valid
+    |> Validations.validate_email_format()
+    # ensure the email is unique
     |> unique_constraint(
-      :username,
-      message: "The username #{attrs.username} is already taken."
+      :email,
+      message: "The email #{attrs.email} is already taken."
     )
-    # ensure the username is not similar to the one given
-    |> ensure_not_similar()
-  end # end of username changeset
+  end # end of the email_changeset
 
 end # end of the module defintion

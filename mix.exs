@@ -49,7 +49,8 @@ defmodule Wynix.MixProject do
       {:ueberauth, "~> 0.6.3"},
       {:ueberauth_linkedin, "~> 0.3.2"},
       {:argon2_elixir, "~> 2.3"},
-      {:timex, "~> 3.6"}
+      {:timex, "~> 3.6"},
+      {:ex_phone_number, "~> 0.2.0"}
     ]
   end
 

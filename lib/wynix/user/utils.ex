@@ -8,28 +8,14 @@ defmodule Wynix.User.Utils do
     alias Wynix.Utilities.{Random}
 
     @spec put_account_code(Ecto.Changeset.t) :: Ecto.Changeset.t
-    def put_account_code(%Ecto.Changeset{valid?: true, changes: %{username: username}} = changeset) do
+    def put_account_code(%Ecto.Changeset{valid?: true, changes: %{username: username, account_type: account_type}} = changeset) do
       # generate a randome string
-      rand = Random.random(6)
+      rand = Random.random(10)
       # put the change to the changeset
-      changeset |> put_change(:account_code, username <> rand)
+      changeset |> put_change(:account_code, "#{account_type}-#{rand}")
     end
     # called if the changeset is invalid
     def put_account_code(changeset), do: changeset
-
-    @doc """
-        Add Username adds the username to a changeset
-        Username is got from the email address of the user.
-    """
-    @spec put_username(Ecto.Changeset.t) :: Ecto.Changeset.t
-    def put_username(%Ecto.Changeset{valid?: true, changes: %{email: email}} = changeset) do
-        # get the username from the email
-        [_email, username, _domain] = Regex.run(~r/(\w+)@([\w.]+)/, email)
-        # add the username to the changeset
-        changeset |> put_change(:username, username)
-    end # end of add_username/1
-    # called if the changeset is false
-    def put_username(changeset), do: changeset
 
     @doc """
         Add activation code adds an activation code to a newly created changeset
@@ -44,13 +30,12 @@ defmodule Wynix.User.Utils do
     # called if changeset is not valid
     def add_activation_code(changeset), do: changeset
 
-    @spec add_susbscription(Ecto.Changeset.t()) :: Ecto.Changeset.t()
     @doc """
         Add Subscription information
         It sets the subscription date to the current date, the expiriy date to a month after todays date
     """
-    @spec add_activation_code(Ecto.Changeset.t) :: Ecto.Changeset.t
-    def add_susbscription(%Ecto.Changeset{valid?: true} = changeset) do
+    @spec add_subscription(Ecto.Changeset.t) :: Ecto.Changeset.t
+    def add_subscription(%Ecto.Changeset{valid?: true} = changeset) do
         # set the subscription date to the current date
         subscription = %{
             subscription_date: Timex.today(),
@@ -74,7 +59,7 @@ defmodule Wynix.User.Utils do
         |> change(Argon2.add_hash(password))
     end # end of the current password
     # called if the changeset is invalid
-    def hahs_password(changeset), do: changeset
+    def hash_password(changeset), do: changeset
 
     @doc """
         Validate duplicate current email checks the current email address and the newly entered to ensure
@@ -89,7 +74,7 @@ defmodule Wynix.User.Utils do
         # the emails are not similar
         else
             # return the changeset as is
-            changeset
+            changeset |> put_change(:email, new_email)
         end # enf of if
     end # end of validate_duplicate_current_email/1
     # called if the changeset is invalid
@@ -107,8 +92,8 @@ defmodule Wynix.User.Utils do
             changeset |> add_error(:password, "The new passsword: #{new_password} and the current password in use are similar.")
         # the emails are not similar
         else
-            # return the changeset as is
-            changeset
+            # hash the new password and put it in the changeset
+            changeset |> put_change(:password_hash, Argon2.add_hash(new_password))
         end # enf of if
     end # end of validate_duplicate_current_password/1
     # called if the changeset is invalid
