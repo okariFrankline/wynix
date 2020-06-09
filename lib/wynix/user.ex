@@ -51,7 +51,7 @@ defmodule Wynix.User do
   """
   def create_account(attrs \\ %{}) do
     %Account{}
-    |> Account.changeset(attrs)
+    |> Account.registration_changeset(attrs)
     |> Repo.insert()
   end
 

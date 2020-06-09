@@ -5,11 +5,12 @@ defmodule Wynix.User.Utils do
     import Ecto.Changeset
     # user struct
     alias Wynix.User.{Account}
+    alias Wynix.Utilities.{Random}
 
-     @spec put_account_code(Ecto.Changeset.t) :: Ecto.Changeset.t
+    @spec put_account_code(Ecto.Changeset.t) :: Ecto.Changeset.t
     def put_account_code(%Ecto.Changeset{valid?: true, changes: %{username: username}} = changeset) do
       # generate a randome string
-      rand = :base64.encode(:crypto.strong_rand_bytes(3))
+      rand = Random.random(6)
       # put the change to the changeset
       changeset |> put_change(:account_code, username <> rand)
     end
