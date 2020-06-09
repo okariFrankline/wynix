@@ -4,6 +4,7 @@ defmodule Wynix.User.Account do
   """
   use Ecto.Schema
   import Ecto.Changeset
+  alias Wynix.User.Utils
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -11,14 +12,21 @@ defmodule Wynix.User.Account do
     field :account_code, :string
     field :account_type, :string
     field :email, :string
-    field :password, :string
+    field :password, :string, virtual: true
+    field :password_confirmation, :string, virtual: true
     field :password_hash, :string
     field :username, :string
+    field :is_active, :boolean, default: true
+    field :is_suspended, :boolean, default: false
 
     timestamps()
   end
 
   @doc false
+  @spec changeset(
+          {map, map} | %{:__struct__ => atom | %{__changeset__: map}, optional(atom) => any},
+          :invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}
+        ) :: Ecto.Changeset.t()
   def changeset(account, attrs) do
     account
     |> cast(attrs, [
@@ -27,16 +35,18 @@ defmodule Wynix.User.Account do
       :password_hash,
       :account_type,
       :account_code,
-      :username
-    ])
-    |> validate_required([
-      :email,
-      :password,
-      :account_code
+      :username,
+      :is_active,
+      :is_suspended
     ])
   end
 
   @doc false
+  @spec registration_changeset(
+          {map, map} | %{:__struct__ => atom | %{__changeset__: map}, optional(atom) => any},
+          :invalid
+          | %{:email => any, optional(:__struct__) => none, optional(atom | binary) => any}
+        ) :: Ecto.Changeset.t()
   def registration_changeset(account, attrs) do
     changeset(account, attrs)
     # ensure the password is given
@@ -53,7 +63,7 @@ defmodule Wynix.User.Account do
     |> validate_required([
       :password
       ],
-      message: "Your password must br given"
+      message: "Your password must be given"
     )
     # ensure the password is atleast 8 characters
     |> validate_length(:password, max_length: 100, min_length: 8, message: "Password must be atleast 8 characters long")
@@ -61,13 +71,13 @@ defmodule Wynix.User.Account do
     |> validate_confirmation(:password_confirmation, message: "Your passwords do not match")
     # ensure the email is unique
     |> unique_constraint(:email, message: "The email #{attrs.email} is already taken")
-    # generate a unique account code
-    |> put_account_code()
     # generate the username for the user
-    |> put_username()
+    |> Utils.put_username()
+    # put the account code
+    |> Utils.put_account_code()
     # hash the password
-    |> hash_password()
+    |> Utils.hash_password()
   end # end of the registration changeset
 
-  
-end
+
+end # end of the module defintion

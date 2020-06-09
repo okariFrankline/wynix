@@ -45,7 +45,11 @@ defmodule Wynix.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:ueberauth, "~> 0.6.3"},
+      {:ueberauth_linkedin, "~> 0.3.2"},
+      {:argon2_elixir, "~> 2.3"},
+      {:timex, "~> 3.6"}
     ]
   end
 
