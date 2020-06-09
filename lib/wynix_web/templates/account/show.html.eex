@@ -1,0 +1,38 @@
+<h1>Show Account</h1>
+
+<ul>
+
+  <li>
+    <strong>Email:</strong>
+    <%= @account.email %>
+  </li>
+
+  <li>
+    <strong>Password:</strong>
+    <%= @account.password %>
+  </li>
+
+  <li>
+    <strong>Password hash:</strong>
+    <%= @account.password_hash %>
+  </li>
+
+  <li>
+    <strong>Account type:</strong>
+    <%= @account.account_type %>
+  </li>
+
+  <li>
+    <strong>Account code:</strong>
+    <%= @account.account_code %>
+  </li>
+
+  <li>
+    <strong>Username:</strong>
+    <%= @account.username %>
+  </li>
+
+</ul>
+
+<span><%= link "Edit", to: Routes.account_path(@conn, :edit, @account) %></span>
+<span><%= link "Back", to: Routes.account_path(@conn, :index) %></span>
